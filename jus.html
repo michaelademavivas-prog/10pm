@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relapse Roulette</title>
+    <style>
+        body {
+            background-color: #050505 ;
+            color: #888 ;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            border: 1px solid #222;
+            padding: 30px;
+            background: #0a0a0a;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.05);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        .active-session {
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2);
+            border-color: #500;
+        }
+
+        h1 {
+            font-size: 1rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #444;
+            animation: flicker 3s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 22%, 24%, 55% { opacity: 0.2; }
+        }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333;
+            color: #d1d1d1;
+            padding: 10px;
+            width: 80%;
+            margin: 20px 0;
+            outline: none;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        #status-text {
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+            color: #661010;
+            min-height: 20px;
+            text-transform: uppercase;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid #444;
+            color: #666;
+            padding: 10px 25px;
+            cursor: pointer;
+            transition: all 0.5s;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+        }
+
+        button:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .song-info {
+            margin-top: 20px;
+            display: none;
+            animation: fadeIn 2s forwards;
+        }
+
+        #lyrics-display {
+            margin: 15px 0;
+            font-size: 0.9rem;
+            color: #ccc;
+            height: 140px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            transition: all 0.5s ease;
+            line-height: 1.6;
+            white-space: pre-line;
+            padding: 10px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        audio {
+            margin-top: 10px;
+            filter: invert(100%) grayscale(1);
+            height: 30px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="game-box">
+        <h1>ACCESS_RELAPSE.ex</h1>
+        <p id="status-text">ENTER YOUR EX NAME TO UNLOCK</p>
+        
+        <div id="input-section">
+            <input type="text" id="ex-name" placeholder="Type *that* name..." autocomplete="off">
+            <br>
+            <button id="init-btn" onclick="unlockRelapse()">INITIALIZE PAIN</button>
+        </div>
+
+        <div class="song-info" id="song-info">
+            <p id="dynamic-message"></p>
+            <p id="song-title" style="color: #fff; font-weight: bold;"></p>
+            
+            <div id="lyrics-display">Scanning memory archives...</div>
+
+            <audio id="audio-player" controls>
+                <source id="audio-source" src="" type="audio/mpeg">
+            </audio>
+            <br><br>
+            <button onclick="location.reload()" style="font-size: 0.6rem; border: none; color: #444;">[ (CAN WE) TRY AGAIN?]</button>
+        </div>
+    </div>
+
+    <script>
+        const playlist = [
+            { 
+                title: "Glimpse of Us - Joji", 
+                url: "joji.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "Why then, if she's so perfect..." },
+                    { time: 3, text: "Do I still wish that it was you?" },
+                    { time: 8, text: "Perfect don't mean that it's working" },
+                    { time: 11.5, text: "So what can I do?" },
+                    { time: 16, text: "when you're out of sight" },
+                    { time: 20, text: "in my mind" },
+                    { time: 25, text: "Cause sometimes I look in her eyes" },
+                    { time: 28, text: "And that's where I find a glimpse of us" },
+                    { time: 33, text: "And I try to fall for her touch" },
+                    { time: 36, text: "But I'm thinking of the way it was" },
+                    { time: 41.5, text: "said im fine" },
+                    { time: 43, text: "said I've moved on'" },
+                    { time: 45, text: "I'm only here passing time in her arms" },
+                    { time: 50, text: "hoping I'll find" },
+                    { time: 52.5, text: "a Glimpse of Us" },
+                ] 
+            },
+            { 
+                title: "The Man Who Can't Be Moved - The Script", 
+                url: "tmwcbm.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "I'm the man who can't be moved" },
+                    { time: 3, text: "Cause if one day you wake up\nand find that you're missing me" }, 
+                    { time: 7.5, text: "And your heart starts to wonder\nwhere on this earth I could be" },
+                    { time: 12, text: "Thinking maybe you came back\nhere to the place that we meet" },
+                     { time: 17.5, text: "and you see me waiting for you" },
+                    { time: 20, text: "on a corner of a street" },
+                    { time: 22, text: "so I'm not movin'" },
+                { time: 25.5, text: "I'm not movin....." },
+                        
+                  ] 
+            },
+            { 
+                title: "13 - LANY", 
+                url: "13.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "I want you to want me to stay" },
+                    { time: 4, text: "Where did we go wrong?" },
+                    { time: 5, text: "I know we started out alright" },
+                    { time: 7, text: "where did we go wrong" },
+                    { time: 9, text: "I swear I knew we'd  last this time " },
+                    { time: 11, text: "Where did we go wrong?" },
+                    { time: 13, text: "oh did you, did you change your mind " },
+                    { time: 14, text: "How could you change your mind?" },
+                    { time: 16, text: "Who got inside of your mind?" },
+                ] 
+            },
+            { 
+                title: "About You - The 1975", 
+                url: "About You.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "Hold on and hope" },
+                    { time: 2, text: "that we'll find our way back\nin the end " },
+                    { time: 9, text: "Do you think I have forgotten?" },
+                    { time: 14, text: "Do you think\nI have forgotten?" },
+                    { time: 19, text: "Do\n          you\nthink\nI have\nforgotten?" },
+                    { time: 24, text:"ABOUT YOU?" },
+                    ]
+                 },
+                    { 
+                title: "Homewrecker - Sombr", 
+                url: "home.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "I don't wanna take down\nyou're lover" },
+                    { time: 3, text: "I don't wanna be a homewrecker" },
+                    { time: 5.5, text: "I just know" },
+                    { time: 6.3, text: "I can be better" },
+                    { time: 7.3, text: "be better" },
+                     { time: 8.3, text: "be better" },
+                    { time: 8.6, text:"be BETTER!" },
+                    
+                    ]  
+                   },
+                    { 
+                title: "Back to Friends - Sombr", 
+                url: "btf.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "I still remember" },
+                    { time: 5, text: "I was scared to take a breath" },
+                    { time: 8, text: "didn't want you to move your" },
+                    { time: 11, text: "head" },
+                    { time: 11.5, text: "how can we go\nback to being friends" },
+                     { time: 16, text: "when we just shared a bed?" },
+                    { time: 21, text:"how can you look\nat me and pretend" },
+                   { time: 26, text: "I'm someone you've never met?" },
+                   
+                   ]  
+                   },
+                    { 
+                title: "Sa Ngalan ng Pag-ibig - December Avenue", 
+                url: "namelove.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "hangang kailan pa ba\nmagtitiis?" },
+                    { time: 3.5, text: "nalunod na sa kaiisip" },
+                    { time: 7.5, text: "huling kapiling ka'y\nsa aking panaginip" },
+                    { time: 13, text: "ikaw mula noon" },
+                    { time: 16, text: "ikaw hanggang ngayon" },
+                     { time: 21.5, text: "hanngang sa dulo ng ating\nwalang hanggan" },
+                    { time: 28, text:"hanggang ang puso'y wala nang\nmaramdaman" },
+                    { time: 34, text: "hanngang sa dulo ng ating\nwalang hanggan" },
+                     { time: 40, text:"hanggang ang puso'y wala nang\n nararamdaman" },
+                      { time: 46, text:"kahit matapos ang\nmagpakailan pa man" },
+                       { time: 51, text:"ako'y mag hihintay" },
+                        { time: 54, text:"Sa Ngalan ng Pag-ibig" },
+                        
+                        ]  
+                   },
+                    { 
+                title: "Bulong - December Avenue", 
+                url: "bulong.mp3", 
+                startTime: 0, 
+                lyrics: [
+                    { time: 0, text: "ako'y alipin ng pag-ibig mo" },
+                    { time: 7, text: "handang ibigin ang isang tulod mo" },
+                    { time: 14, text: "hanggat ang puso mo'y\nsa akin lang" },
+                    { time: 18, text: "hindi ka na malilinlang" },
+                    { time: 22, text: "ikay ang ilaw sa dilim" },
+                     { time: 25, text: "at ang liwanag" },
+                     { time: 27.5, text: "ng mga bituin" },
+                    
+                   
+                   
+                ] 
+            }
+        ];
+
+        const player = document.getElementById('audio-player');
+        const display = document.getElementById('lyrics-display');
+        const container = document.getElementById('game-box');
+        let currentLyrics = [];
+
+        function syncLyrics() {
+            const currentTime = player.currentTime;
+            
+            // Find the active line based on current playback time
+            const activeLine = currentLyrics.reduce((prev, curr) => {
+                return (curr.time <= currentTime) ? curr : prev;
+            }, { text: "..." });
+
+            if (display.innerText !== activeLine.text) {
+                // Visual Transition Effect
+                display.style.opacity = 0;
+                display.style.transform = "scale(0.98)";
+                
+                setTimeout(() => {
+                    display.innerText = activeLine.text;
+                    display.style.opacity = 1;
+                    display.style.transform = "scale(1)";
+                    
+                    // Beat-pulse glow effect
+                    container.style.boxShadow = "0 0 70px rgba(255, 0, 0, 0.4)";
+                    setTimeout(() => {
+                        container.style.boxShadow = "0 0 30px rgba(255, 0, 0, 0.05)";
+                    }, 400);
+                }, 150);
+            }
+        }
+
+        function unlockRelapse() {
+            const nameInput = document.getElementById('ex-name').value;
+            const status = document.getElementById('status-text');
+            
+            if (!nameInput) {
+                status.innerText = "ERROR: NAME REQUIRED";
+                return;
+            }
+
+            document.getElementById('input-section').style.display = "none";
+            status.innerText = "BYPASSING ENCRYPTION...";
+            
+            const randomSong = playlist[Math.floor(Math.random() * playlist.length)];
+            const source = document.getElementById('audio-source');
+
+            currentLyrics = randomSong.lyrics;
+            source.src = randomSong.url;
+            player.load();
+
+            const handlePlay = () => {
+                player.currentTime = randomSong.startTime;
+                const playPromise = player.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        container.classList.add('active-session');
+                        status.style.display = "none";
+                        document.getElementById('song-info').style.display = "block";
+                        document.getElementById('dynamic-message').innerText = `Archive found for: "${nameInput}"`;
+                        document.getElementById('song-title').innerText = `${randomSong.title}`;
+                        
+                        // Attach the precision sync listener
+                        player.ontimeupdate = syncLyrics;
+                    }).catch(() => {
+                        status.innerText = "SYSTEM BLOCKED: CLICK TO OVERRIDE";
+                        window.addEventListener('click', () => handlePlay(), { once: true });
+                    });
+                }
+            };
+
+            player.oncanplay = () => {
+                handlePlay();
+                player.oncanplay = null; 
+            };
+        }
+    </script>
+</body>
+</html>
